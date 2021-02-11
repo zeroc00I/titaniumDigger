@@ -39,7 +39,7 @@ function walkThroughPath(){
 
 	for i in $(eval echo {1..$urlCount});do 
 		
-			pass=$(echo "$pass" | anew collectedPaths)
+			pass=$(echo "$1" | anew collectedPaths)
 			[[ -z "$pass" ]] && 
 			printf "\033[0;33m[Avoiding dup scan]\e[m" &&
 			echo -e "$url\n" || 
