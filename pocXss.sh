@@ -94,10 +94,13 @@ if [[ "$2" ]]; then
 else
 
 #Normal workflow - without queryString
-	curl -k -sL "$1$payload" | 
+	req=$(curl -k -sL "$1$payload")
+	payloadReflected=$(echo "$req" | grep -oE '[[:digit:]]{1,}KNX>')
+
+	echo "$req" | 
 	grep -qi 'KNX>' &&
 	printf "\033[0;32m[Reflected NW]\e[m" &&
-	echo -e "$1$payload\n" ||
+	echo -e "$payloadReflected\n" ||
 	printf "\033[0;31m[MISS]\e[m" &&
 	echo -e "$1$payload\n"
 
