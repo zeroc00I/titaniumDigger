@@ -1,9 +1,14 @@
 #!/bin/bash
 
 set -e 
+
+GREEN=`tput setaf 2`
+NONCOLOR=`tput sgr0`
+
 formatHeaderListFuzzer(){
 	headersWithReflectedValues=$(
-	awk '{x=NR+1}(NR<=x){print $0": z3r0c00I"NR }' "$1" )
+	awk '{x=NR+1}(NR<=x){print $0": z3r0c00I"NR }' "$1" 
+	)
 	echo -e "$headersWithReflectedValues" 
 }
 
@@ -26,7 +31,7 @@ headerKeyPairToCurlFormat(){
 	echo -e "$1" | 
 	sed 's/^/-H "/g;s/$/"/g' | 
 	tr '\n' ' ' | 
-	sed 's#^#\ncurl "'$2'" -s -m "'$3'" #g;s/-H ""//g'
+	sed 's#^#\ncurl "'$2'" -sf -m "'$3'" #g;s/-H ""//g'
 }
 
 parallelFuzzerWithMaxHeader(){
@@ -39,8 +44,8 @@ parallelFuzzerWithMaxHeader(){
 
 scanReflectedHeaders(){
 	valueReflected=$(echo -e "$1" | grep -Eo 'z3r0c00I[[:digit:]]{1,}')
-	keyReflected=$(echo -e $allHeaders | grep -oE "[a-zA-Z0-9-]{1,}\:.$valueReflected")	
-	echo -e "$keyReflected"
+	keyReflected=$(echo -e $allHeaders | grep -oE "[a-zA-Z0-9-]{1,}\:.$valueReflected\b")	
+	echo -e "$GREEN[Reflected]$NONCOLOR $keyReflected"
 }
 
 main(){
