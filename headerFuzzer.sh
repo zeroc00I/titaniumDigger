@@ -52,8 +52,9 @@ scanReflectedHeaders(){
 
 checkEmptyArgs(){
 	# default Values
-	if [ -z "$wordList" ]; then 
+	if [ -z "$wordList" ]; then
 		wordList='/opt/SecLists/Discovery/Web-Content/BurpSuite-ParamMiner/lowercase-headers'
+		echo -e "$YELLOW[CONFIG]$NONCOLOR Tool will try to use default wordlist $wordlist (check if it exists)"
 	else
 		echo -e "$RED[CONFIG]$NONCOLOR Please, set some $YELLOW wordlist $NONCOLOR with -w"
 		exit
@@ -86,9 +87,13 @@ main(){
 	export -f headerKeyPairToCurlFormat
 	export -f scanReflectedHeaders
 
-	allHeaders=$(formatHeaderListFuzzer "$wordList")
-	headerKeyPair=$(buildRequestWithNHeaders "$allHeaders" "80" 'https://iam.zerocool.cf/headervul.php' "2")
-	parallelFuzzerWithMaxHeader "$headerKeyPair" "2"
+	allHeaders=$(
+		formatHeaderListFuzzer "$wordList"
+	)
+	headerKeyPair=$(
+		buildRequestWithNHeaders "$allHeaders" "$maxRequestHeader" "$domain" "$maxTimeout"
+	)
+	parallelFuzzerWithMaxHeader "$headerKeyPair" "$maxWorkers"
 }
 
 while getopts ":r:c:w:d:m:" OPTION; do
