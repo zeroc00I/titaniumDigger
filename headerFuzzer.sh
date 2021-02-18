@@ -54,7 +54,7 @@ checkEmptyArgs(){
 	# default Values
 	if [ -z "$wordList" ]; then
 		wordList='/opt/SecLists/Discovery/Web-Content/BurpSuite-ParamMiner/lowercase-headers'
-		echo -e "$YELLOW[CONFIG]$NONCOLOR Tool will try to use default wordlist $wordlist (check if it exists)"
+		echo -e "$YELLOW[CONFIG]$NONCOLOR Tool will try to use default wordlist $wordList (check if it exists)"
 	else
 		echo -e "$RED[CONFIG]$NONCOLOR Please, set some $YELLOW wordlist $NONCOLOR with -w"
 		exit
