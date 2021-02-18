@@ -60,7 +60,8 @@ checkEmptyArgs(){
 		exit
 	fi
 	if [ -z "$domain" ]; then 
-		echo -e "$RED[CONFIG]$NONCOLOR Please, set some target $YELLOW domain $NONCOLOR with -d(omain)" 
+		echo -e "$RED[CONFIG]$NONCOLOR Please, set some target $YELLOW domain $NONCOLOR with -d(omain)"
+		usage
 		exit
 	fi
 	if [ -z "$maxWorkers" ]; then
@@ -75,7 +76,7 @@ checkEmptyArgs(){
 }
 
 usage(){
-	echo -e "$YELLOW Usage:$NONCOLOR\n headerFuzzer [--help] [-d|--domain] [-w|--wordlist]\n"
+	echo -e "\n$YELLOW Usage:$NONCOLOR\n headerFuzzer [--help] [-d|--domain] [-w|--wordlist]\n"
 	echo -e "$YELLOW Optional:$NONCOLOR\n -c: Max curl workers"
 	echo -e " -m: Request Time Out limit"
 	echo -e " -r: Max request header per request"
