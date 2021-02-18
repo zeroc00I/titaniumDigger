@@ -2,12 +2,14 @@
 
 set -e 
 
+RED=`tput setaf 1`
 GREEN=`tput setaf 2`
+YELLOW=`tput setaf 3`
 NONCOLOR=`tput sgr0`
 
 formatHeaderListFuzzer(){
 	headersWithReflectedValues=$(
-	awk '{x=NR+1}(NR<=x){print $0": z3r0c00I"NR }' "$1" 
+		awk '{x=NR+1}(NR<=x){print $0": z3r0c00I"NR }' "$1" 
 	)
 	echo -e "$headersWithReflectedValues" 
 }
@@ -48,9 +50,39 @@ scanReflectedHeaders(){
 	echo -e "$GREEN[Reflected]$NONCOLOR $keyReflected"
 }
 
+checkEmptyArgs(){
+	# default Values
+	if [ -z "$wordList" ]; then 
+		wordList='/opt/SecLists/Discovery/Web-Content/BurpSuite-ParamMiner/lowercase-headers'
+	else
+		echo -e "$RED[CONFIG]$NONCOLOR Please, set some $YELLOW wordlist $NONCOLOR with -w"
+		exit
+	fi
+	if [ -z "$domain" ]; then 
+		echo -e "$RED[CONFIG]$NONCOLOR Please, set some target $YELLOW domain $NONCOLOR with -d(omain)" 
+		exit
+	fi
+	if [ -z "$maxWorkers" ]; then
+		maxWorkers=100
+	fi
+	if [ -z "$maxTimeout" ]; then
+		maxTimeout=10
+	fi
+	if [ -z "$maxRequestHeader" ]; then
+		maxRequestHeader=90
+	fi
+}
+
+usage(){
+	echo -e "$YELLOW Usage:$NONCOLOR\n headerFuzzer [--help] [-d|--domain] [-w|--wordlist]\n"
+	echo -e "$YELLOW Optional:$NONCOLOR\n -c: Max curl workers"
+	echo -e " -m: Request Time Out limit"
+	echo -e " -r: Max request header per request"
+}
+
 main(){
-	#should be recieved by arg parser
-	wordList='/opt/SecLists/Discovery/Web-Content/BurpSuite-ParamMiner/lowercase-headers'
+	checkEmptyArgs
+
 	export -f headerKeyPairToCurlFormat
 	export -f scanReflectedHeaders
 
@@ -58,5 +90,19 @@ main(){
 	headerKeyPair=$(buildRequestWithNHeaders "$allHeaders" "80" 'https://iam.zerocool.cf/headervul.php' "2")
 	parallelFuzzerWithMaxHeader "$headerKeyPair" "2"
 }
+
+while getopts ":r:c:w:d:m:" OPTION; do
+	case $OPTION in
+	    c) export maxWorkers=$OPTARG;;
+		w) export wordList=$OPTARG;;
+		d) export domain=$OPTARG;; 
+		m) export maxTimeout=$OPTARG;; 
+		r) export maxRequestHeader=$OPTARG;;
+	    h | *) # Display help.
+				usage
+				exit
+			;;
+	esac
+done
 
 main
