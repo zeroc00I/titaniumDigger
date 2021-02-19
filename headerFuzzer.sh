@@ -9,9 +9,9 @@ NONCOLOR=`tput sgr0`
 
 formatHeaderListFuzzer(){
 	headersWithReflectedValues=$(
-		awk '{x=NR+1}(NR<=x){print $0": '$prefixPayload'"NR }' "$1" 
+		awk '{x=NR+1}(NR<=x){print $0": '$prefixPayload'?"NR }' "$1" 
 	)
-	echo -e "$headersWithReflectedValues" 
+	echo -e "$headersWithReflectedValues"
 }
 
 buildRequestWithNHeaders(){
@@ -45,8 +45,8 @@ parallelFuzzerWithMaxHeader(){
 }
 
 scanReflectedHeaders(){
-	valueReflected=$(echo -e "$1" | grep -Eo "$prefixPayload[[:digit:]]{1,}")
-	keyReflected=$(echo -e $allHeaders | grep -oE "[a-zA-Z0-9-]{1,}\:.$valueReflected\b")	
+	valueReflected=$(echo -e "$1" | grep -Eo "$prefixPayload\?[[:digit:]]{1,}\b")
+	keyReflected=$(echo -e "$allHeaders" | grep "$valueReflected\b")	
 	echo -e "$GREEN[Reflected]$NONCOLOR $keyReflected"
 }
 
