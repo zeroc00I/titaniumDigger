@@ -9,7 +9,7 @@ NONCOLOR=`tput sgr0`
 
 formatHeaderListFuzzer(){
 	headersWithReflectedValues=$(
-		awk '{x=NR+1}(NR<=x){print $0": z3r0c00I"NR }' "$1" 
+		awk '{x=NR+1}(NR<=x){print $0": '$prefixPayload'"NR }' "$1" 
 	)
 	echo -e "$headersWithReflectedValues" 
 }
@@ -45,13 +45,16 @@ parallelFuzzerWithMaxHeader(){
 }
 
 scanReflectedHeaders(){
-	valueReflected=$(echo -e "$1" | grep -Eo 'z3r0c00I[[:digit:]]{1,}')
+	valueReflected=$(echo -e "$1" | grep -Eo "$prefixPayload[[:digit:]]{1,}")
 	keyReflected=$(echo -e $allHeaders | grep -oE "[a-zA-Z0-9-]{1,}\:.$valueReflected\b")	
 	echo -e "$GREEN[Reflected]$NONCOLOR $keyReflected"
 }
 
 checkEmptyArgs(){
 	# default Values
+	if [ -z "$prefixPayload" ]; then
+		prefixPayload='z3r0c00I'
+	fi
 	if [ -z "$wordList" ]; then
 		wordList='/opt/SecLists/Discovery/Web-Content/BurpSuite-ParamMiner/lowercase-headers'
 		echo -e "$YELLOW[CONFIG]$NONCOLOR Tool will try to use default wordlist $wordList (check if it exists)"
@@ -91,19 +94,22 @@ main(){
 	allHeaders=$(
 		formatHeaderListFuzzer "$wordList"
 	)
+
 	headerKeyPair=$(
 		buildRequestWithNHeaders "$allHeaders" "$maxRequestHeader" "$domain" "$maxTimeout"
 	)
+	
 	parallelFuzzerWithMaxHeader "$headerKeyPair" "$maxWorkers"
 }
 
-while getopts ":r:c:w:d:m:" OPTION; do
+while getopts ":r:c:w:d:m:p:" OPTION; do
 	case $OPTION in
 	    c) export maxWorkers=$OPTARG;;
 		w) export wordList=$OPTARG;;
 		d) export domain=$OPTARG;; 
 		m) export maxTimeout=$OPTARG;; 
 		r) export maxRequestHeader=$OPTARG;;
+		p) export prefixPayload=$OPTARG;;
 	    h | *) # Display help.
 				usage
 				exit
