@@ -55,12 +55,13 @@ checkEmptyArgs(){
 	if [ -z "$prefixPayload" ]; then
 		prefixPayload='z3r0c00I'
 	fi
+
 	if [ -z "$wordList" ]; then
 		wordList='/opt/SecLists/Discovery/Web-Content/BurpSuite-ParamMiner/lowercase-headers'
 		echo -e "$YELLOW[CONFIG]$NONCOLOR Tool will try to use default wordlist $wordList (check if it exists)"
 	else
-		echo -e "$RED[CONFIG]$NONCOLOR Please, set some $YELLOW wordlist $NONCOLOR with -w"
-		exit
+		echo -e "$GREEN[CONFIG]$NONCOLOR Using $YELLOW wordlist $NONCOLOR $wordList"
+
 	fi
 	if [ -z "$domain" ]; then 
 		echo -e "$RED[CONFIG]$NONCOLOR Please, set some target $YELLOW domain $NONCOLOR with -d(omain)"
@@ -98,7 +99,7 @@ main(){
 	headerKeyPair=$(
 		buildRequestWithNHeaders "$allHeaders" "$maxRequestHeader" "$domain" "$maxTimeout"
 	)
-	
+
 	parallelFuzzerWithMaxHeader "$headerKeyPair" "$maxWorkers"
 }
 
