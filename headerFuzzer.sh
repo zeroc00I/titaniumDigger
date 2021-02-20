@@ -22,7 +22,7 @@ buildRequestWithNHeaders(){
 
 	echo -e "$1" |
 	awk '{x=NR+1}(NR<=x){print $0}(NR%'$2'==0){print "#"}' |
-	xargs -P100 -I@ -d '#' bash -c 'headerKeyPairToCurlFormat "@" "'$3'" '$4
+	xargs -P100 -I@ -d '#' bash -c 'headerKeyPairToCurlFormat "@" '$3
 }
 
 headerKeyPairToCurlFormat(){
@@ -32,8 +32,8 @@ headerKeyPairToCurlFormat(){
 
 	echo -e "$1" | 
 	sed 's/^/-H "/g;s/$/"/g' | 
-	tr '\n' ' ' | 
-	sed 's#^#\ncurl "'$2'" -sf -m "'$3'" #g;s/-H ""//g'
+	tr '\n' ' ' |
+	sed 's#^#\ncurl "'$domain'" -sf -m "'$2'" #g;s/-H ""//g'
 }
 
 parallelFuzzerWithMaxHeader(){
@@ -92,13 +92,14 @@ main(){
 
 	export -f headerKeyPairToCurlFormat
 	export -f scanReflectedHeaders
+	export -f buildRequestWithNHeaders
 
 	allHeaders=$(
 		formatHeaderListFuzzer "$wordList"
 	)
 
 	headerKeyPair=$(
-		buildRequestWithNHeaders "$allHeaders" "$maxRequestHeader" "$domain" "$maxTimeout"
+		buildRequestWithNHeaders "$allHeaders" "$maxRequestHeader" "$maxTimeout"
 	)
 
 	parallelFuzzerWithMaxHeader "$headerKeyPair" "$maxWorkers"
