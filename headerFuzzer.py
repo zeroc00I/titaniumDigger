@@ -3,13 +3,10 @@ import getopt, sys
 wordList = []
 
 
-def loadWordlist(wordlistPath):
-    with open(wordlistPath) as listPayloads:
-            for line in listPayloads:
+def loadPayloadList(payloadListPath):
+    with open(payloadListPath) as payloadList:
+            for line in payloadList:
                 wordList.append(line)
-            for i in wordList:
-                print(i)
-
 
 def main():
     isH = True
@@ -22,7 +19,6 @@ def main():
         print (str(err))
         sys.exit(2)
     for current_argument in arguments:
-        print(current_argument)
         if ("-h" in current_argument) or ("-help" in current_argument):
             print('headerFuzzer [--help] [-d|--domain] [-w|--wordlist]')
             print ('-c: Max curl workers')
@@ -34,7 +30,7 @@ def main():
             if ("-v" in current_argument)  or ("-verbose" in current_argument):
                 print ("Enabling verbose mode")
             elif ("-w" in current_argument) or ("-wordlist" in current_argument):
-                loadWordlist(current_value)
+                loadPayloadList(current_value)
 
 if __name__ == "__main__":
     main()
