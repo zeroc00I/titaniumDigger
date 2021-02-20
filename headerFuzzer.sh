@@ -47,7 +47,7 @@ parallelFuzzerWithMaxHeader(){
 scanReflectedHeaders(){
 	valueReflected=$(echo -e "$1" | grep -Eo "$prefixPayload\?[[:digit:]]{1,}")
 	keyReflected=$(echo -e "$allHeaders" | grep "$valueReflected\b")	
-	echo -e "$GREEN[Reflected]$NONCOLOR $keyReflected"
+	echo -e "$GREEN[Reflected]$NONCOLOR[$domain] $keyReflected"
 }
 
 checkEmptyArgs(){
