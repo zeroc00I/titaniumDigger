@@ -76,7 +76,7 @@ checkEmptyArgs(){
 		maxTimeout=10
 	fi
 	if [ -z "$maxRequestHeader" ]; then
-		maxRequestHeader=90
+		maxRequestHeader=60
 	fi
 }
 
