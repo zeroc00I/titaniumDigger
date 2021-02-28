@@ -10,15 +10,10 @@ allHosts="$1"
 
 cat $allHosts | 
 xargs -P400 -I@ sh -c '
-	ip=$(dig +short @); 
-	[ ! -z "$ip" ]] &&
-	[ ! -z "${ip##*52.*}" ] &&
-	[ ! -z "${ip##*54.*}" ] && 
-	[ ! -z "${ip##*18.*}" ] && 
-	[ ! -z "${ip##10.*}" ] && 
-	echo "$ip" | grep -vE "[a-zA-Z]" | anew ipsUp'
-
-echo "Starting Scan using IpsUp File"
+	 timeout 1 bash -c "
+	  2>/dev/null>/dev/udp/@/1 && echo @ | anew ipsUp
+	 "
+	 '
 
 echo "$portByOpenFrequency" |
 while read line;
