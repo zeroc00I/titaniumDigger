@@ -35,3 +35,7 @@ Incrementa path keys do diretorio do dominio
 ## 2 Xss
 Checar argumento dominios e ver se url está viva
 
+# Ideias
+Pegar parametros e urls dentro dos JS
+https://github.com/m4ll0k/Bug-Bounty-Toolz/blob/master/getjswords.py
+https://github.com/KathanP19/JSFScan.sh/blob/master/install.sh
