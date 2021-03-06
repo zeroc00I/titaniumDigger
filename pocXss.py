@@ -1,18 +1,26 @@
 import getopt, sys
    
-wordList = []
-
+argumentList = []
+urlList = []
 
 def loadArgumentList(argumentListPath):
-    with open(argumentListPath) as argumentList:
-            for line in argumentList:
-                wordList.append(line)
+    with open(argumentListPath) as argumentFileList:
+            for line in argumentFileList:
+                lineArgumentWithoutN = line.replace('\n','')
+                argumentList.append(lineArgumentWithoutN)
+
+
+def loadURrlList(argumentListPath):
+    with open(argumentListPath) as urlFileList:
+            for line in urlFileList:
+                lineFileWithoutN = line.replace('\n','')
+                urlList.append(lineFileWithoutN)
 
 def main():
     isH = True
     full_cmd_arguments = sys.argv # Get full command-line arguments
     argument_list = full_cmd_arguments[1:] # Keep all but the first
-    short_options = "hw:d"
+    short_options = "hu:da:d"
     try:
         arguments, argv = getopt.getopt(argument_list, short_options, ["w="])
     except getopt.error as err: # Output error, and return with an error code
@@ -26,8 +34,12 @@ def main():
             isH = False
     if (isH == True):
         for current_argument, current_value in arguments:
-            if ("-w" in current_argument) or ("-wordlist" in current_argument):
-                loadPayloadList(current_value)
+            if ("-a" in current_argument) or ("--argument" in current_argument):
+                loadArgumentList(current_value)
+            if ("-u" in current_argument) or ("--url" in current_argument):
+                loadURrlList(current_value)        
 
 if __name__ == "__main__":
     main()
+
+

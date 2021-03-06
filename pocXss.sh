@@ -17,7 +17,7 @@ function analizingCorrectPathWalk(){
 
 		if [[ "$urlHaveQueryString" -gt 0 ]]; then
 
-			howMuchQueryString=$(echo "$url" | grep -o '[?|&][a-zA-Z0-9_]\{1,\}=' | wc -l)
+			howMuchQueryString=$(echo "$url" | grep -o 	'[?|&][a-zA-Z0-9_]\{1,\}=' | wc -l)
 
 			if [[ $howMuchQueryString -eq 1 ]]; then
 
