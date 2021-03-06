@@ -1,4 +1,5 @@
 import getopt, sys
+import requests
    
 argumentList = []
 urlList = []
@@ -37,9 +38,35 @@ def main():
             if ("-a" in current_argument) or ("--argument" in current_argument):
                 loadArgumentList(current_value)
             if ("-u" in current_argument) or ("--url" in current_argument):
-                loadURrlList(current_value)        
+                loadURrlList(current_value) 
+        definitiveList = makeDefinitiveList(urlList, argument_list)       
+        makeRequest(definitiveList)
+
+def makeDefinitiveList(urlList, argument_list):
+    definitiveList = []
+    for urlEntry in urlList:
+        for argumentEntry in argumentList:
+            definitiveList.append(urlEntry+"?"+argumentEntry+"=198522355kkll")
+    return definitiveList
+
+
+def makeRequest(definitiveList):
+    payload={}
+    for url in definitiveList:
+        try:
+            response = requests.request("GET", url, data=payload)
+        except:
+            print('Erro no request em: '+url)
+            continue
+        if ("198522355kkll" in response.text):
+            print("Refletido em:"+url)
+        else:
+            print("n achou")     
+
 
 if __name__ == "__main__":
     main()
+
+
 
 
