@@ -41,7 +41,7 @@ def menu():
     parser = argparse.ArgumentParser() 
     parser.add_argument('-m', help='Max Seconds Request timeout', dest='maxReqTimeout', type=int)
     parser.add_argument('-r', help='Max request header per request', dest='maxHeaderReq', type=int)
-    parser.add_argument('-w', help='Payloads from wordlist file', dest='payloadWordlist', type=argparse.FileType('r'))
+    parser.add_argument('-w', help='Payloads from wordlist file', required='True', dest='payloadWordlist', type=argparse.FileType('r'))
     parser.add_argument('-u', help='Target single url', dest='url')
     parser.add_argument('-U', help='Target multiple url from file', dest='multipleUrl', type=argparse.FileType('r'))
     args = parser.parse_args()
