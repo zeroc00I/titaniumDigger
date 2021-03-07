@@ -10,7 +10,6 @@ def loadArgumentList(argumentListPath):
                 lineArgumentWithoutN = line.replace('\n','')
                 argumentList.append(lineArgumentWithoutN)
 
-
 def loadURLList(urlListPath):
     for line in urlListPath.readlines():
         lineFileWithoutN = line.replace('\n','')
@@ -23,7 +22,6 @@ def makeDefinitiveList(urlList, argument_list):
         for argumentEntry in argumentList:
             definitiveList.append(urlEntry+"?"+argumentEntry+"=198522355kkll")
     return definitiveList
-
 
 def makeRequest(definitiveList):
     payload={}
