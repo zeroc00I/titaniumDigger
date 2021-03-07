@@ -43,7 +43,7 @@ def menu():
     parser.add_argument('-r', help='Max request header per request', dest='maxHeaderReq', type=int)
     parser.add_argument('-w', help='Payloads from wordlist file', required='True', dest='payloadWordlist', type=argparse.FileType('r'))
     parser.add_argument('-u', help='Target single url', dest='url')
-    parser.add_argument('-U', help='Target multiple url from file', dest='multipleUrl', type=argparse.FileType('r'))
+    parser.add_argument('-U', help='Target multiple url from file', dest='urlsFromFile', type=argparse.FileType('r'))
     args = parser.parse_args()
     
     return args
@@ -52,7 +52,7 @@ def main():
 
     args = menu()
     loadArgumentList(args.payloadWordlist)
-    loadURLList(args.multipleUrl) 
+    loadURLList(args.urlsFromFile) 
     
     definitiveList = makeDefinitiveList(urlList, argumentList) 
     makeRequest(definitiveList)
