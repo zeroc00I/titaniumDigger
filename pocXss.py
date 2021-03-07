@@ -1,4 +1,3 @@
-import getopt, sys
 import requests
 import argparse
 import os
