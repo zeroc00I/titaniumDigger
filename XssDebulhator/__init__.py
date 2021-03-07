@@ -5,8 +5,8 @@ import os, sys
 currentdir = os.path.dirname(os.path.realpath(__file__))
 parentdir = os.path.dirname(currentdir)
 sys.path.append(parentdir)
-from XssDebulhator.module import StdArgument
-stdArgumentList = StdArgument.stdArgument()
+from XssDebulhator.module import stdArgumentFile
+stdArgumentList = stdArgumentFile.stdArgument()
 argumentList = []
 urlList = []
 #tdArgumentList = stdArgument
