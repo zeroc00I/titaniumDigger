@@ -19,7 +19,7 @@ def loadURLList(urlListPath):
 
 def makeDefinitiveList(urlList, argument_list):
     definitiveList = []
-    print("lista",urlList) 
+
     for urlEntry in urlList:
         print(urlEntry)
         for argumentEntry in argumentList:
