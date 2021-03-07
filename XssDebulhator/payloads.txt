@@ -1,0 +1,9 @@
+uri
+url
+text
+message
+msg
+user
+pass
+view
+debug
