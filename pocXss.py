@@ -40,12 +40,6 @@ def makeRequest(definitiveList):
         else:
             print("Não achou para %s" % url)     
 
-def usage():
-    print('headerFuzzer [--help] [-d|--domain] [-w|--wordlist]')
-    print ('-m: Request Time Out limit')
-    print ('-r: Max request header per request')
-    exit()
-
 def menu():
 
     parser = argparse.ArgumentParser() 
