@@ -6,9 +6,9 @@ argumentList = []
 urlList = []
 
 def loadArgumentList(argumentListPath):
-            for line in argumentListPath.readlines():
-                lineArgumentWithoutN = line.replace('\n','')
-                argumentList.append(lineArgumentWithoutN)
+    for line in argumentListPath.readlines():
+        lineArgumentWithoutN = line.replace('\n','')
+        argumentList.append(lineArgumentWithoutN)
 
 def loadURLList(urlListPath):
     for line in urlListPath.readlines():
