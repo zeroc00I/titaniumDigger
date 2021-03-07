@@ -21,7 +21,6 @@ def makeDefinitiveList(urlList, argument_list):
     definitiveList = []
 
     for urlEntry in urlList:
-        print(urlEntry)
         for argumentEntry in argumentList:
             definitiveList.append(urlEntry+"?"+argumentEntry+"=198522355kkll")
     return definitiveList
