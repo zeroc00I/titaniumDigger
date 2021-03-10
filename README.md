@@ -35,6 +35,10 @@ Incrementa path keys do diretorio do dominio
 ## 2 Xss
 Checar argumento dominios e ver se url está viva
 
+## Payloads para usar como base de escape
+- HTMLENCODE
+$test = 'This is a &#269;&#x5d0; test&#39;'; (https://www.php.net/manual/en/function.html-entity-decode.php)
+
 # Ideias
 Pegar parametros e urls dentro dos JS
 https://github.com/m4ll0k/Bug-Bounty-Toolz/blob/master/getjswords.py
