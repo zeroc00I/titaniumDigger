@@ -1,6 +1,7 @@
 from pprint import pprint
 import socket
 import sys
+import json
 
 txt = """1.site.com.br
 2.site.com.br/teste123
@@ -31,9 +32,11 @@ def makeArrayKeyIpValueHosts(txt):
 
 	  if ipDomain not in pool_domain:
 	    pool_domain[ipDomain] = [line]
+	    #pool_domain[ipDomain]['lastActivity'] = 'None'
 	  else:
 	    pool_domain[ipDomain].append(line)
-	pprint(pool_domain)
+	
+	print(json.dumps(pool_domain, indent = 3))
 
 if __name__ == "__main__":
 	if not sys.stdin.isatty():
