@@ -36,7 +36,7 @@ def makeArrayKeyIpValueHosts(txt):
 	  else:
 	    pool_domain[ipDomain].append(line)
 	
-	print(json.dumps(pool_domain, indent = 3))
+	print(json.dumps(pool_domain, indent = 3, sort_keys=True))
 
 if __name__ == "__main__":
 	if not sys.stdin.isatty():
