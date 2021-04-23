@@ -148,13 +148,13 @@ def main():
             target_state=scan(awvs_url,target,Crawl,user_agent,profile_id,proxy_address,int(proxy_port),scan_speed,limit_crawler_scope,excluded_paths,scan_cookie,is_to_scan)
             if target_state!=2:
                 add_count_suss=add_count_suss+1
-                print("{0} adicionado com sucesso:".format(target),str(add_count_suss))
+                #print("{0} adicionado com sucesso:".format(target),str(add_count_suss))
             elif target_state==2:
                 pass
             else:
                 open('./add_log/error_url.txt', 'a', encoding='utf-8').write(target + '\n')
                 error_count=error_count+1
-                print("{0} 添加失败".format(target),str(error_count))
+                #print("{0} 添加失败".format(target),str(error_count))
     elif target_scan==True:
         get_target_list()
         scanUrl2= ''.join((awvs_url, '/api/v1/scans'))
