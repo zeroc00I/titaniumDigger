@@ -1,4 +1,8 @@
 #!/bin/bash
+## Usage
+## xargs -a firsthttpxhosts -I@ -P20 sh -c 'hakrawler -nocolor -url "@" -plain | ./varsandforms.sh' | anew customScriptResult
+##
+
 RED=`tput setaf 1`
 GREEN=`tput setaf 2`
 YELLOW=`tput setaf 3`
