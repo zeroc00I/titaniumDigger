@@ -84,11 +84,11 @@ def url_mutation_querie_fuzz(url):
                 check_sqli_time_based(url,url_replaced)
     else:
         if options.file_to_fuzz_keys and options.payloads_to_fuzz_values:
-            brute_url_mutation_querie_fuzz(url,key,value)
+            brute_url_mutation_querie_fuzz(url)
         else:
             print('[Warn] URL without queryString. You need to brute force it by using payload flag')
 
-def brute_url_mutation_querie_fuzz(url,key,value):
+def brute_url_mutation_querie_fuzz(url,key=False,value=False):
     if key and value:
         values_words = open(options.payloads_to_fuzz_values).readlines()
         for value_word in values_words:
@@ -100,7 +100,10 @@ def brute_url_mutation_querie_fuzz(url,key,value):
         values_words = open(options.payloads_to_fuzz_values).readlines()
         for key_word in keys_words:
             for value_word in values_words:
-                url_replaced = url.replace(url,url+'&'+key_word+"="+value_word).replace('\n','')
+                if "?" in url:
+                    url_replaced = url.replace(url,url+'&'+key_word+"="+value_word).replace('\n','')
+                else:
+                    url_replaced = url.replace(url,url+'?'+key_word+"="+value_word).replace('\n','')
                 check_sqli_time_based(url,url_replaced)
 
 def main():
