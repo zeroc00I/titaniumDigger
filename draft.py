@@ -1,6 +1,9 @@
+from colorama.ansi import Style
 import requests, optparse, sys, multiprocessing
 from math import fsum
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
+import colorama
+from colorama import Fore
 
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
@@ -60,9 +63,9 @@ def check_sqli_time_based(url,url_replaced=False):
     if url_replaced:
         url=url_replaced # just to log the sqli url
     if rules_to_confirme_blind_sqli:
-        print('[Blind Confirmed] {} / [Reqs] Average:{} Blinded:{}'.format(url,average_common_elapsed_time,blind_elapsed_time))
+        print('{}[Blind Confirmed]{} {} / [Reqs] Average:{} Blinded:{}'.format(Fore.RED,Fore.RESET,url,average_common_elapsed_time,blind_elapsed_time))
     else:
-        print('[There isnt blind SQLI] {}'.format(url))
+        print('{}[There isnt blind SQLI]{}{}'.format(Fore.BLACK,Fore.LIGHTBLACK_EX,url,Style.RESET_ALL))
 
 def url_mutation_querie_fuzz(url):
     if not url.startswith('http'):
@@ -78,7 +81,7 @@ def url_mutation_querie_fuzz(url):
                 check_sqli_time_based(url,url_replaced)
     else:
         if options.file_to_fuzz_keys and options.payloads_to_fuzz_values:
-            brute_url_mutation_querie_fuzz(url)
+            brute_url_mutation_querie_fuzz(url,key,value)
         else:
             print('[Warn] URL without queryString. You need to brute force it by using payload flag')
 
