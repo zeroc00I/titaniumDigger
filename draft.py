@@ -61,6 +61,8 @@ def check_sqli_time_based(url,url_replaced=False):
         url=url_replaced # just to log the sqli url
     if rules_to_confirme_blind_sqli:
         print('[Blind Confirmed] {} / [Reqs] Average:{} Blinded:{}'.format(url,average_common_elapsed_time,blind_elapsed_time))
+    else:
+        print('[There isnt blind SQLI] {}'.format(url))
 
 def url_mutation_querie_fuzz(url):
     if not url.startswith('http'):
@@ -90,7 +92,6 @@ def brute_url_mutation_querie_fuzz(url,key,value):
     if options.fuzz_keys_and_payloads:
         keys_words = open(options.file_to_fuzz_keys).readlines()
         values_words = open(options.payloads_to_fuzz_values).readlines()
-        print('I will brute force param and values')
         for key_word in keys_words:
             for value_word in values_words:
                 url_replaced = url.replace(url,url+'&'+key_word+"="+value_word).replace('\n','')
