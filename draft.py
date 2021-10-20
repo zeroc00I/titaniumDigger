@@ -18,6 +18,8 @@ def menu():
     parser.add_option('-k', '--keys', dest="file_to_fuzz_keys", type=str)
     parser.add_option('-p', '--payloads', dest="payloads_to_fuzz_values", type=str)
     parser.add_option('-d', '--discover', action="store_true", dest="fuzz_keys_and_payloads")
+    parser.add_option('-v', '--verbose', action="store_true", dest="verbose_errors")
+
 
     options, args = parser.parse_args()
 
@@ -65,7 +67,8 @@ def check_sqli_time_based(url,url_replaced=False):
     if rules_to_confirme_blind_sqli:
         print('{}[Blind Confirmed]{} {} / [Reqs] Average:{} Blinded:{}'.format(Fore.RED,Fore.RESET,url,average_common_elapsed_time,blind_elapsed_time))
     else:
-        print('{}[There isnt blind SQLI]{}{}'.format(Fore.BLACK,Fore.LIGHTBLACK_EX,url,Style.RESET_ALL))
+        if options.verbose_errors:
+            print('{}[There isnt blind SQLI]{}{}'.format(Fore.BLACK,Fore.LIGHTBLACK_EX,url,Style.RESET_ALL))
 
 def url_mutation_querie_fuzz(url):
     if not url.startswith('http'):
