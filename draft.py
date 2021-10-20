@@ -61,8 +61,6 @@ def check_sqli_time_based(url,url_replaced=False):
         url=url_replaced # just to log the sqli url
     if rules_to_confirme_blind_sqli:
         print('[Blind Confirmed] {} / [Reqs] Average:{} Blinded:{}'.format(url,average_common_elapsed_time,blind_elapsed_time))
-    else:
-        print('[There isnt blind SQLI] {}'.format(url))
 
 def url_mutation_querie_fuzz(url):
     if not url.startswith('http'):
@@ -78,22 +76,25 @@ def url_mutation_querie_fuzz(url):
                 check_sqli_time_based(url,url_replaced)
     else:
         if options.file_to_fuzz_keys and options.payloads_to_fuzz_values:
-            brute_url_mutation_querie_fuzz(url,key,value)
+            brute_url_mutation_querie_fuzz(url)
         else:
             print('[Warn] URL without queryString. You need to brute force it by using payload flag')
 
 def brute_url_mutation_querie_fuzz(url,key,value):
     if key and value:
-        fuzz_values_file = open(options.payloads_to_fuzz_values)
-        values_words = map(str.strip, fuzz_values_file.readlines())
+        values_words = open(options.payloads_to_fuzz_values).readlines()
         for value_word in values_words:
-            url_replaced = url.replace(key+"="+value,key+"="+value_word)
+            url_replaced = url.replace(key+"="+value,key+"="+value_word).replace('\n','')
             check_sqli_time_based(url,url_replaced)
 
     if options.fuzz_keys_and_payloads:
-        fuzz_keys_file = open(options.file_to_fuzz_keys)
-        keys_words = map(str.strip, fuzz_keys_file.readlines())
+        keys_words = open(options.file_to_fuzz_keys).readlines()
+        values_words = open(options.payloads_to_fuzz_values).readlines()
         print('I will brute force param and values')
+        for key_word in keys_words:
+            for value_word in values_words:
+                url_replaced = url.replace(url,url+'&'+key_word+"="+value_word).replace('\n','')
+                check_sqli_time_based(url,url_replaced)
 
 def main():
     menu()
