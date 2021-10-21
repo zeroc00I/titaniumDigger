@@ -105,6 +105,8 @@ def brute_url_mutation_querie_fuzz(url,key=False,value=False):
                 else:
                     url_replaced = url.replace(url,url+'?'+key_word+"="+value_word).replace('\n','')
                 check_sqli_time_based(url,url_replaced)
+    else:
+        print('{}[INFO] URL without "?" and without brute param {}{}'.format(Fore.BLACK,Fore.LIGHTBLACK_EX,url,Style.RESET_ALL))
 
 def main():
     menu()
