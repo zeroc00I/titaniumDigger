@@ -17,7 +17,8 @@ def menu():
     parser.add_option('-o', '--output', dest="output", type=str,default='resultsBlind.txt')
     parser.add_option('-k', '--keys', dest="file_to_fuzz_keys", type=str)
     parser.add_option('-p', '--payloads', dest="payloads_to_fuzz_values", type=str)
-    parser.add_option('-d', '--discover', action="store_true", dest="fuzz_keys_and_payloads")
+    parser.add_option('-B', '--bruteheader', dest="brute_file_to_fuzz_header")
+    parser.add_option('-b', '--brute', action="store_true", dest="fuzz_keys_and_payloads")
     parser.add_option('-v', '--verbose', action="store_true", dest="verbose_errors")
 
 
@@ -37,10 +38,17 @@ def menu():
         exit()
     globals().update(locals())
 
-def mesure_time_loading(url,url_replaced=False):
-    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"}
+def mesure_time_loading(url,url_replaced=False,header_word=False,value_word=False):
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+        }
+    if header_word and value_word:
+        headers = { 
+            header_word:value_word,
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+        }
     if url_replaced is not False:
-        url=url_replaced
+        url = url_replaced
     try:
         r = requests.get(url,headers=headers,allow_redirects=False, verify=False,timeout=20)
     except requests.exceptions.ConnectionError:
@@ -55,9 +63,9 @@ def test_time_based_sql_blind(url):
         exit()
     return round(r.elapsed.total_seconds(),2)
 
-def check_sqli_time_based(url,url_replaced=False):
+def check_sqli_time_based(url,url_replaced=False,header_word=False,value_word=False):
     first_elapsed_time = mesure_time_loading(url)
-    blind_elapsed_time = mesure_time_loading(url,url_replaced)
+    blind_elapsed_time = mesure_time_loading(url,url_replaced,header_word,value_word)
     second_elapsed_time = mesure_time_loading(url)
     average_common_elapsed_time = round((sum([first_elapsed_time+second_elapsed_time])/2),2)
     rules_to_confirme_blind_sqli = average_common_elapsed_time < blind_elapsed_time and blind_elapsed_time > options.time_to_sleep
@@ -86,7 +94,8 @@ def url_mutation_querie_fuzz(url):
         if options.file_to_fuzz_keys and options.payloads_to_fuzz_values:
             brute_url_mutation_querie_fuzz(url)
         else:
-            print('[Warn] URL without queryString. You need to brute force it by using payload flag')
+            if options.verbose_errors:
+                print('[Warn] URL without queryString. You need to brute force it by using payload flag')
 
 def brute_url_mutation_querie_fuzz(url,key=False,value=False):
     if key and value:
@@ -106,7 +115,17 @@ def brute_url_mutation_querie_fuzz(url,key=False,value=False):
                     url_replaced = url.replace(url,url+'?'+key_word+"="+value_word).replace('\n','')
                 check_sqli_time_based(url,url_replaced)
     else:
-        print('{}[INFO] URL without "?" and without brute param {}{}'.format(Fore.BLACK,Fore.LIGHTBLACK_EX,url,Style.RESET_ALL))
+        if options.verbose_errors:
+            print('{}[INFO] URL without "?" and without brute param {}{}'.format(Fore.BLACK,Fore.LIGHTBLACK_EX,url,Style.RESET_ALL))
+
+def brute_blind_header(url):
+    values_headers = open(options.brute_file_to_fuzz_header).readlines()
+    values_words = open(options.payloads_to_fuzz_values).readlines()
+    for header_word in values_headers:
+        header_word = header_word.replace('\n','')
+        for value_word in values_words:
+            value_word=value_word.replace('\n','')
+            check_sqli_time_based(url,False,header_word,value_word)
 
 def main():
     menu()
@@ -115,15 +134,25 @@ def main():
     else:
         f = open(options.file)
         urls = map(str.strip, f.readlines())
-    fire = multiprocessing.Pool(options.threads)
-    try:
-        fire.map(url_mutation_querie_fuzz, urls)
-        fire.close()
-        fire.join()
-    except UnboundLocalError:
-        pass
-    except KeyboardInterrupt:
-        sys.exit(0)
+        fire = multiprocessing.Pool(options.threads)
+    if options.brute_file_to_fuzz_header:
+        try:
+            fire.map(brute_blind_header, urls)
+            fire.close()
+            fire.join()
+        except UnboundLocalError:
+                pass
+        except KeyboardInterrupt:
+                sys.exit(0)
+    else:
+        try:
+            fire.map(url_mutation_querie_fuzz, urls)
+            fire.close()
+            fire.join()
+        except UnboundLocalError:
+            pass
+        except KeyboardInterrupt:
+            sys.exit(0)
 
 if __name__ == "__main__":
     main()
