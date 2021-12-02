@@ -46,6 +46,10 @@ def find_documents(uid):
     return json.loads(r.content)
 
 def get_documents_preview(documents):
+    
+    if len(documents['records']) == 0:
+        print(":: Ops! No results found with {}".format(options.email))
+    
     for x in range(0,len(documents['records'])):
         storageid = documents['records'][x]["storageid"]
         url = 'https://api.intelx.io/file/preview?sid={}&f=0&l=22&c=1&m=24&b=leaks.private.general&k={}'.format(storageid,options.key)
