@@ -15,7 +15,7 @@ def menu():
     options, args = parser.parse_args()
 
     if not options.email:
-        print("[INFO] Please, enter some email e.g: admin@example.com")
+        print("[INFO] Please, enter some email e.g: -e admin@example.com")
         exit()
 
     header = {
