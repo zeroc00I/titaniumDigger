@@ -1,6 +1,5 @@
 #
 # by @zeroc00I - 2021
-# api-key configured bellow is public and related to unauth users according intelx.io
 #
 
 import requests, optparse, json
@@ -52,7 +51,7 @@ def main():
     menu()
     search_result_uid = search()
     documents = find_documents(search_result_uid)
-    print(get_documents_preview(documents))
+    get_documents_preview(documents)
 
 if __name__== "__main__":
     main()
