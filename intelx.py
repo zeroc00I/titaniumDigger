@@ -4,6 +4,7 @@
 
 import requests, optparse, json
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
+requests.packages.urllib3.disable_warnings() 
 
 def menu():
     parser = optparse.OptionParser()
