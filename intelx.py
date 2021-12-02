@@ -32,6 +32,10 @@ def search():
 
     r = requests.post(url,verify=False,data=payload,headers=header)
     
+    if r.status_code == 402:
+        print("[Error] Oh no! Intelx.io have just blocked your IP\n:: Wait some minutes to get some more free queries\n:: Or re-run with -k entering with your apikey already registered ")
+        exit()
+
     return json.loads(r.content)['id']
 
 def find_documents(uid):
