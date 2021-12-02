@@ -28,12 +28,16 @@ def menu():
 def search():
     url = 'https://api.intelx.io/intelligent/search'
 
-    payload = '{{"term":"{}","lookuplevel":0,"maxresults":1000,"timeout":null,"datefrom":"","dateto":"","sort":2,"media":0,"terminate":[]}}'.format(options.email)
+    payload = '{{"term":"{}","lookuplevel":0,"maxresults":100,"timeout":null,"datefrom":"","dateto":"","sort":2,"media":0,"terminate":[]}}'.format(options.email)
 
     r = requests.post(url,verify=False,data=payload,headers=header)
     
+    if r.status_code == 401:
+        print("[Error] Oh no! \n:: Intelx.io said that this key got banned ¯\_(ツ)_/¯\n:: Exiting ...")
+        exit()
+
     if r.status_code == 402:
-        print("[Error] Oh no! Intelx.io have just blocked your IP\n:: Wait some minutes to get some more free queries\n:: Or re-run with -k entering with your apikey already registered ")
+        print("[Error] Oh no! Intelx.io have just blocked your IP\n:: Wait some minutes to get some more free queries\n:: Or re-run with -k entering with your apikey already registered")
         exit()
 
     return json.loads(r.content)['id']
