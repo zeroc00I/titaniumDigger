@@ -1,5 +1,6 @@
 #
 # by @zeroc00I - 2021
+# api-key configured bellow is public and related to unauth users according intelx.io
 #
 
 import requests, optparse, json
