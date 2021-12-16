@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-import urllib.parse, requests, optparse
+import urllib.parse, requests, optparse, json
 from urllib3.exceptions import NewConnectionError
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
 
@@ -23,28 +23,6 @@ def menu():
     
     globals().update(locals())
 
-class URL_Builder:
-    def __init__(self,url,replace_to):
-        if "?" not in url or "=" not in url:
-            exit()
-
-        self.url = url
-        self.replace_to = urllib.parse.quote_plus(replace_to)
-        self.query_string = url.split('?')[1].split('&')
-        self.replaces_result = []
-    
-    def get_querystring_from_url(self):
-        for x in self.query_string:
-            key = x.split('=')[0]
-            value = x.split('=')[1]
-
-            if options.add_string:
-                replace_results = self.url.replace(x,key+'='+value+self.replace_to)
-            else:
-                replace_results = self.url.replace(x,key+'='+self.replace_to)
-
-            self.replaces_result.append(replace_results)
-
 class Requester:
     def __init__(self):
         pass
@@ -57,7 +35,7 @@ class Requester:
             exit
         except Exception:
             exit
-
+    
     def get_response_line_number(self):
         array_response = self.request.text.split('\n')
         array_response_without_empty_values = [x for x in array_response if x]
@@ -65,19 +43,52 @@ class Requester:
         return len(array_response_without_empty_values)
 
     def get_status_code(self):
+
         return self.request.status_code
+
+class URL_Builder:
+    def __init__(self,url,replace_to):
+        if "?" not in url or "=" not in url:
+            exit()
+
+        self.url = url
+        self.replace_to = urllib.parse.quote_plus(replace_to)
+        self.query_string = url.split('?')[1].split('&')
+        self.replaces_result = [url]
+        self.result = []
+    
+    def get_querystring_from_url(self):
+        for x in self.query_string:
+            key = x.split('=')[0]
+            value = x.split('=')[1]
+
+            if options.add_string:
+                replaced_results = self.url.replace(x,key+'='+value+self.replace_to)
+            else:
+                replaced_results = self.url.replace(x,key+'='+self.replace_to)
+
+            self.replaces_result.append(replaced_results)
+    
+    def iterate_all_urls(self):
+        for x in self.replaces_result:
+            request = Requester()
+            request.get(x)
+
+            self.result.append({
+                "url":x,
+                "status_code":request.get_status_code(),
+                "line_numbers":request.get_response_line_number()
+            })
+                            
+
 
 def main():
     menu()
 
     builder = URL_Builder(options.url,options.string_to_replace)
     builder.get_querystring_from_url()
-
-    for x in builder.replaces_result:
-        request = Requester()
-        request.get(x)
-        if request.get_status_code() != options.filter_status_code and request.get_status_code() != 403:
-            print("[URL] {} [Lines] {} [Status Code] {}".format(x,request.get_response_line_number(),request.get_status_code()))
+    builder.iterate_all_urls()
+    print(json.dumps(builder.result,indent=2))
 
 if __name__ == "__main__":
     main()
