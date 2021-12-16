@@ -71,17 +71,19 @@ class URL_Builder:
         self.result = []
     
     def get_querystring_from_url(self):
-        for x in self.query_string:
-            key = x.split('=')[0]
-            value = x.split('=')[1]
+        for qs in self.query_string:
+            if qs:
+                key = qs.split('=')[0]
+                value = qs.split('=')[1]
 
-            if options.add_string:
-                replaced_results = self.url.replace(x,key+'='+value+self.replace_to)
+                if options.add_string:
+                    replaced_results = self.url.replace(qs,key+'='+value+self.replace_to)
+                else:
+                    replaced_results = self.url.replace(qs,key+'='+self.replace_to)
+
+                self.replaces_result.append(replaced_results)
             else:
-                replaced_results = self.url.replace(x,key+'='+self.replace_to)
-
-            self.replaces_result.append(replaced_results)
-    
+                pass
     def iterate_all_urls(self):
         for url in self.replaces_result:
             request = Requester()
