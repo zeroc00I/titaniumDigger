@@ -118,8 +118,9 @@ def main():
                     builder.iterate_all_urls()
                 except AttributeError:
                     pass
-
-                print(json.dumps(builder.result,indent=2))
+                
+                if builder.result:
+                    print(json.dumps(builder.result,indent=2))
 
 if __name__ == "__main__":
     main()
