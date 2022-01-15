@@ -1,6 +1,7 @@
 from bs4 import BeautifulSoup
 import requests, optparse, json
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
+requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 def menu():
     parser = optparse.OptionParser()
@@ -35,7 +36,7 @@ def get_asn_from_org():
                         }
                     }
                 """
-    r = requests.post(endpoint, json={"query": query})
+    r = requests.post(endpoint, json={"query": query},verify=False)
     if r.status_code == 200:
         return json.loads(r.content)
     else:
@@ -49,7 +50,7 @@ def format_html_with_asns(prefixes):
             print(x.get_text())
 
 def get_asn_prefixes(asn):
-    r = requests.get('https://www.bigdatacloud.com/asn-lookup/{}/prefixes'.format(asn))
+    r = requests.get('https://www.bigdatacloud.com/asn-lookup/{}/prefixes'.format(asn),verify=False)
     return r.content
 
 def get_domains_from_org(org):
