@@ -150,13 +150,14 @@ def main():
                         string_to_match
                     )
 
-                    print(result)
+                    if result:
+                        print(result)
             else:
                 result = requester.search_into_response(
                         options.string_to_search_on_results
                 )
-
-                print(result)
+                if result:
+                    print(result)
         else:
             print('[-] Requisição falhou {}'.format(response))
 
