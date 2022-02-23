@@ -1,6 +1,6 @@
 """
 with <3 by @zeroc00I 22/02/22 22:22
-python3 zerotversal.py -u https://zerocool.onion/ -a 'WEB-INF/web.xml' -d 3 -s '<?xml'
+python3 zerotversal.py -u https://zerocool.onion/ -a 'WEB-INF/web.xml' -d 3 -s '<?xml,xmlns:xsi'
 """
 from bs4 import BeautifulSoup
 from urllib.parse import urlsplit
@@ -124,9 +124,9 @@ class Requester:
         is_string_found = string in self.request.text
         
         if is_string_found:
-            return "[+] String ENCONTRADA em {}".format(self.url)
+            return "[+] String '{}' ENCONTRADA em {}".format(string,self.url)
         
-        return "[-] String não encontrada em {}".format(self.url)
+        return "[-] String '{}' não encontrada em {}".format(string,self.url)
 
 
 def main():
@@ -143,7 +143,7 @@ def main():
                 strings_to_match = options.string_to_search_on_results.split(',')
                 for string_to_match in strings_to_match:
                     result = requester.search_into_response(
-                        options.string_to_search_on_results
+                        string_to_match
                     )
 
                     print(result)
