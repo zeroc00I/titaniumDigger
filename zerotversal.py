@@ -90,12 +90,16 @@ class Requester:
     
     def get(self):
         try:
-            self.request = requests.get(
-                self.url,
-                allow_redirects=True, 
-                verify=False,
-                timeout=8
+
+            s = requests.Session()
+            req = requests.Request(
+                method='GET',
+                url=self.url
             )
+            prep =  req.prepare()
+            prep.url = self.url
+
+            self.request = s.send(prep, verify=False)
 
         except NewConnectionError:
             exit
