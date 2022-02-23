@@ -1,6 +1,6 @@
 """
 with <3 by @zeroc00I 22/02/22 22:22
-python3 zerotversal.py -u https://zerocool.onion/ -a 'WEB-INF/web.xml' -d 3 -s '<?xml,xmlns:xsi'
+python3 zerotversal.py -u https://zerocool.onion -a 'WEB-INF/web.xml' -d 3 -s '<?xml,xmlns:xsi'
 """
 from bs4 import BeautifulSoup
 from urllib.parse import urlsplit
@@ -16,7 +16,7 @@ def menu():
     parser.add_option('-u', '--url', dest="url_to_permute", help='https://example.zerocool.com/item?search=waf')
     parser.add_option('-a', '--add', dest="payload_to_add", help='/WEB-INF')
     parser.add_option('-d', '--depth', dest="directory_transversal_depth", default=1, type=int, help='1 will add /./ on url')
-    parser.add_option('-s', '--search', dest="string_to_search_on_results", help='Extract all cidrs from ASNs')
+    parser.add_option('-s', '--search', dest="string_to_search_on_results", help='string that will be used to grep on request response body')
 
     options, args = parser.parse_args()
 
@@ -129,8 +129,9 @@ class Requester:
         
         if is_string_found:
             return "[+] String '{}' ENCONTRADA em {}".format(string,self.url)
-        
-        return "[-] String '{}' não encontrada em {}".format(string,self.url)
+        else:
+            return None
+        #return "[-] String '{}' não encontrada em {}".format(string,self.url)
 
 
 def main():
