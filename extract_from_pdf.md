@@ -21,5 +21,5 @@ rm -f "$tmp"
 ## Fire!
 
 ```
-cat hakrawlerResultsFromManyHosts | grep "\.pdf$" | rush -j 300 '/opt/pdftotext/extract.sh {} 2>/dev/null' 2>/dev/null  | anew linksfrompdf
+grep "\.pdf$" hakrawlerResultsFromManyHosts| xargs -P300 -I@ bash -c '/opt/pdftotext/extract.sh @ 2>/dev/null' 2>/dev/null  | anew linksfrompdf
 ```
