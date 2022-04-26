@@ -142,10 +142,12 @@ class fuzzer:
     self.url = url
     self.setup = setup(url)
     self.wordlist = wordlist
+    self.common_words_length = []
     self.fire()
 
   def fire(self):
     words = open(self.wordlist).readlines()
+    
     for fuzz_word in words:
       fuzz_word = fuzz_word.replace('\n','')
       url_to_fuzz = self.url+"/"+fuzz_word+"."+self.setup.wordlist_extension_to_be_used
@@ -154,10 +156,13 @@ class fuzzer:
       if not final_request.status_error:
         word_number = final_request.get_response_word_number()
 
-        if word_number is not self.setup.baseline.get_response_word_number():
+        if int(word_number) not in self.common_words_length:
           print('[+] {}'.format(url_to_fuzz))
-        else:
-          print('[-] {}'.format(fuzz_word))
+          self.common_words_length.append(
+            word_number
+          )
+        #else:
+          #print('[-] {}'.format(self.common_words_length))
 
 def main():
   menu()
