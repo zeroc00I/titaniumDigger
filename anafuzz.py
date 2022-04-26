@@ -1,4 +1,3 @@
-#!/usr/bin/python3.9
 import requests, optparse, os
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
 from urllib.parse import urlparse
@@ -16,14 +15,18 @@ def menu():
     options, args = parser.parse_args()
 
     if not options.url_to_fuzz:
-        print("[+] Please enter some URL with -u parameter (Check -h for help)")
-        exit()
+      print("[-] Please enter some URL with -u parameter (Check -h for help)")
+      exit()
+    if not options.raw_wordlist_without_extension:
+      print("[-] Please enter some WORDLIST with -w parameter (Check -h for help)")
+      exit()
 
     globals().update(locals())
 
 class Requester:
     def __init__(self,url):
         self.url = url
+        self.status_error = False
         self.get()
     
     def get(self):
@@ -43,11 +46,10 @@ class Requester:
 
             self.request = s.send(prep, verify=False)
 
-        except NewConnectionError:
-            exit
         except Exception:
-            exit
-        
+          self.status_error = True
+          return
+
         return self.request.text
 
     def get_response_word_number(self):
@@ -123,6 +125,7 @@ class setup:
 
     else:
       print('Wordlist based on webserver {} not found'.format(webserver))
+      exit()
 
   def tech_detection(self):
     main_page_technology =  self.baseline.get_page_tech_detection()
@@ -135,19 +138,33 @@ class setup:
       self.wordlist_extension_to_be_used = main_page_technology
 
 class fuzzer:
-  def __init__(self,url):
+  def __init__(self,url,wordlist):
     self.url = url
     self.setup = setup(url)
+    self.wordlist = wordlist
     self.fire()
 
   def fire(self):
-    print(self.setup.wordlist_extension_to_be_used)
+    words = open(self.wordlist).readlines()
+    for fuzz_word in words:
+      fuzz_word = fuzz_word.replace('\n','')
+      url_to_fuzz = self.url+"/"+fuzz_word+"."+self.setup.wordlist_extension_to_be_used
+      final_request = Requester(url_to_fuzz)
+
+      if not final_request.status_error:
+        word_number = final_request.get_response_word_number()
+
+        if word_number is not self.setup.baseline.get_response_word_number():
+          print('[+] {}'.format(url_to_fuzz))
+        else:
+          print('[-] {}'.format(fuzz_word))
 
 def main():
   menu()
-  fuzzer(options.url_to_fuzz)
-  
-
+  fuzzer(
+    options.url_to_fuzz,
+    options.raw_wordlist_without_extension
+    )
 
 if __name__ == "__main__":
   main()
