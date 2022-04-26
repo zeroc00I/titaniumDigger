@@ -2,6 +2,7 @@
 import requests, optparse, os
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
 from urllib.parse import urlparse
+from lxml.html import soupparser
 
 requests.packages.urllib3.disable_warnings()
 
@@ -59,12 +60,13 @@ class Requester:
       return self.request.url
 
     def get_web_server(self):
-      if 'server' in self.request.headers.keys():
+      if 'Server' in self.request.headers.keys():
         if '/' in self.request.headers['Server']:
           self.webserver = self.request.headers['Server'].split('/')[0]
-          print('teste')
+          return self.webserver
         else:
           self.webserver = self.request.headers['Server']
+          return self.webserver
 
     def get_page_tech_detection(self):
       page_url_filename = os.path.basename(
@@ -96,10 +98,11 @@ class Requester:
         else:
             return None
 
-class fuzzer:
+class setup:
   def __init__(self,url):
     self.url = url
     self.baseline()
+    self.tech_detection()
 
   def baseline(self):
     self.baseline = Requester(self.url)
@@ -107,26 +110,43 @@ class fuzzer:
     self.baseline_diretorio = Requester(self.url+"/xhopefullydoesntexistx/")
 
   def wordlist_based_on_webserver(self):
-    print(type(self.webserver))
+    webserver = self.webserver.lower()
+    wordlist_by_extension = {
+    "apache":["php","html"],
+    "tomcat":"jsp",
+    "coldfusion":"cf",
+    "iis":["asp","aspx"]
+    } 
+    if webserver in wordlist_by_extension.keys():
+      self.wordlist_extension_to_be_used = wordlist_by_extension[webserver]
+      print(self.wordlist_extension_to_be_used)
+
+    else:
+      print('Wordlist based on webserver {} not found'.format(webserver))
 
   def tech_detection(self):
     main_page_technology =  self.baseline.get_page_tech_detection()
     
     if main_page_technology is None:
       self.webserver = self.baseline.get_web_server() if self.baseline.get_web_server() else None
-      print(self.webserver)
       self.wordlist_based_on_webserver()
     
     else:
-      print("Technology used is {}".format(main_page_technology))
+      self.wordlist_extension_to_be_used = main_page_technology
+
+class fuzzer:
+  def __init__(self,url):
+    self.url = url
+    self.setup = setup(url)
+    self.fire()
+
+  def fire(self):
+    print(self.setup.wordlist_extension_to_be_used)
 
 def main():
   menu()
-  my_fuzzer = fuzzer(
-    options.url_to_fuzz
-    )
-
-  my_fuzzer.tech_detection()
+  fuzzer(options.url_to_fuzz)
+  
 
 
 if __name__ == "__main__":
