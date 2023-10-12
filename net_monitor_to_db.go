@@ -7,7 +7,6 @@ import (
     "net"
     "net/http"
     "os"
-    "strings"
     "sync"
     "time"
 
@@ -65,14 +64,13 @@ table-layout: fixed;
         </style>
 	</head>
     <body>
-        <h1>SQLite Data Table</h1>
+        <h1>Junk VPS Traffic</h1>
         <table id="data-table">
             <thead>
                 <tr>
                     <th>ID</th>
                     <th>IP</th>
                     <th>Content</th>
-                    <th>Port Number</th>
                     <th>Datetime</th>
                 </tr>
             </thead>
@@ -82,7 +80,6 @@ table-layout: fixed;
                     <td>{{.ID}}</td>
                     <td>{{.IP}}</td>
                     <td>{{.Content | html}}</td>
-                    <td>{{.Port}}</td>
                     <td>{{.Datetime}}</td>
                 </tr>
                 {{end}}
@@ -100,10 +97,10 @@ table-layout: fixed;
                         tbody.innerHTML = "";
     
                         // Iterate through the data in reverse order (latest first)
-                        for (let i = data.length - 1; i >= 0; i--) {
+                        for (let i = 0; i <= data.length; i++) {
                             const row = data[i];
                             const tr = document.createElement("tr");
-                            tr.innerHTML = "<td>" + row.ID + "</td><td>" + row.IP + "</td><td>" + row.Content + "</td><td>" + row.Port + "</td><td>" + row.Datetime + "</td>";
+                            tr.innerHTML = "<td>" + row.ID + "</td><td>" + row.IP + "</td><td>" + row.Content + "</td><td>" + row.Datetime + "</td>";
                             tbody.appendChild(tr);
                         }
                     });
@@ -120,13 +117,12 @@ type Data struct {
     ID       int
     IP       string
     Content  string
-    Port     string
     Datetime string
 }
 
 func getData(w http.ResponseWriter, r *http.Request) {
     var data []Data
-    rows, err := db.Query("SELECT * FROM data")
+    rows, err := db.Query("SELECT * FROM data ORDER BY ID DESC LIMIT 100")
     if err != nil {
         http.Error(w, err.Error(), http.StatusInternalServerError)
         return
@@ -135,7 +131,7 @@ func getData(w http.ResponseWriter, r *http.Request) {
 
     for rows.Next() {
         var d Data
-        err = rows.Scan(&d.ID, &d.IP, &d.Content, &d.Port, &d.Datetime)
+        err = rows.Scan(&d.ID, &d.IP, &d.Content, &d.Datetime)
         if err != nil {
             http.Error(w, err.Error(), http.StatusInternalServerError)
             return
@@ -162,7 +158,7 @@ func main() {
     defer db.Close()
 
     // Create the data table if it doesn't exist
-    _, err = db.Exec("CREATE TABLE IF NOT EXISTS data (id INTEGER PRIMARY KEY, ip TEXT, content TEXT, port TEXT, datetime DATETIME)")
+    _, err = db.Exec("CREATE TABLE IF NOT EXISTS data (id INTEGER PRIMARY KEY, ip TEXT, content TEXT, datetime DATETIME)")
     if err != nil {
         fmt.Printf("Error creating the data table: %s\n", err)
         os.Exit(1)
@@ -236,20 +232,13 @@ func handleConnection(conn net.Conn, db *sql.DB, wg *sync.WaitGroup) {
 
     // Extract the client's IP address and port number
     remoteAddr := conn.RemoteAddr().String()
-    parts := strings.Split(remoteAddr, ":")
-    var port string
-    if len(parts) > 1 {
-        port = parts[len(parts)-1]
-    } else {
-        port = "N/A"
-    }
 
     // Sanitize the HTML content using bluemonday
     sanitizer := bluemonday.UGCPolicy()
     sanitizedData := sanitizer.Sanitize(data)
 
     // Insert data, IP, sanitized content, and port into the database
-    _, err = db.Exec("INSERT INTO data (ip, content, port, datetime) VALUES (?, ?, ?, datetime('now'))", remoteAddr, sanitizedData, port)
+    _, err = db.Exec("INSERT INTO data (ip, content, datetime) VALUES (?, ?, datetime('now'))", remoteAddr, sanitizedData)
     if err != nil {
         fmt.Printf("Error inserting data into the database: %s\n", err)
     }
