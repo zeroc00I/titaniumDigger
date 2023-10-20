@@ -1,3 +1,5 @@
+// You should add some rule to guide all incoming traffic to a specific port number.
+// Example: iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 23:65535 -j DNAT --to-destination eth0_IP_here:65535
 package main
 
 import (
