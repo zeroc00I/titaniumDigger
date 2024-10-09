@@ -1,3 +1,4 @@
+// httpx -l att.txt -er 'GTM-[A-Z0-9]{7,8}' -t 30 | grep GTM
 package main
 
 import (
@@ -152,7 +153,7 @@ func main() {
         return
     }
 
-	unwantedSubstrings := []string{"browsingTopics", "this.", "browsingTopics", ".brand", "compatMod", "google", "adservices", "facebook", "licdn", "gstatic", "jquery", "doubleclick", "hotjar", "linkedin", "recaptcha.net", "bing", "pinimg", "yimg"}
+	unwantedSubstrings := []string{".command","youtube","computeGtmParameter","browsingTopics", "this.", "browsingTopics", ".brand", "compatMod", "google", "adservices", "facebook", "licdn", "gstatic", "jquery", "doubleclick", "hotjar", "linkedin", "recaptcha.net", "bing", "pinimg", "yimg"}
 	filteredSet := FilterURLs(urlSet, unwantedSubstrings)
 
 	if len(filteredSet) == 0 {
