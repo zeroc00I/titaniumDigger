@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"crypto/tls"
 	"fmt"
 	"io/ioutil"
@@ -15,14 +14,14 @@ import (
 
 // URLExtractor struct to hold necessary fields
 type URLExtractor struct {
-	tldFile   string
-	id        string
-	proxyURL  string
-	client    *http.Client
+	tlds     []string
+	id       string
+	proxyURL string
+	client   *http.Client
 }
 
 // NewURLExtractor initializes a new URLExtractor
-func NewURLExtractor(tldFile, id, proxyURL string) *URLExtractor {
+func NewURLExtractor(tlds []string, id, proxyURL string) *URLExtractor {
 	tr := &http.Transport{
 		Proxy: http.ProxyURL(parseProxyURL(proxyURL)),
 		TLSClientConfig: &tls.Config{
@@ -30,7 +29,7 @@ func NewURLExtractor(tldFile, id, proxyURL string) *URLExtractor {
 		},
 	}
 	client := &http.Client{Transport: tr}
-	return &URLExtractor{tldFile: tldFile, id: id, proxyURL: proxyURL, client: client}
+	return &URLExtractor{tlds: tlds, id: id, proxyURL: proxyURL, client: client}
 }
 
 // parseProxyURL parses and returns a proxy URL or nil if there's an error
@@ -41,25 +40,6 @@ func parseProxyURL(proxy string) *url.URL {
 		fmt.Printf("Error parsing proxy URL: %s\n", err)
 		return nil
 	}
-}
-
-// ReadTLDs reads the TLDs from the specified file and returns them as a slice.
-func (ue *URLExtractor) ReadTLDs() ([]string, error) {
-	var tlds []string
-	file, err := os.Open(ue.tldFile)
-	if err != nil {
-		return nil, err
-	}
-	defer file.Close()
-
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		tld := strings.TrimSpace(scanner.Text())
-		if tld != "" {
-			tlds = append(tlds, tld)
-		}
-	}
-	return tlds, scanner.Err()
 }
 
 // BuildURLRegex constructs a regex pattern to match valid URLs ending with specified TLDs.
@@ -88,12 +68,7 @@ func (ue *URLExtractor) ExtractURLs() (map[string]struct{}, error) {
 		return nil, fmt.Errorf("error reading response body: %w", err)
 	}
 
-	tlds, err := ue.ReadTLDs()
-	if err != nil {
-		return nil, fmt.Errorf("error reading TLDs: %w", err)
-	}
-
-	urlRegex := BuildURLRegex(tlds)
+	urlRegex := BuildURLRegex(ue.tlds)
 
 	re := regexp.MustCompile(`[{}()\[\],]`)
 	splitContent := re.Split(string(body), -1)
@@ -127,47 +102,88 @@ func FilterURLs(urlSet map[string]struct{}, unwanted []string) map[string]struct
 	return filteredSet
 }
 
+// CountTLDs counts occurrences of each TLD found in the URLs.
+func CountTLDs(urlSet map[string]struct{}, tlds []string) map[string]int {
+	tldCount := make(map[string]int)
+	for url := range urlSet {
+		for _, tld := range tlds {
+			if strings.HasSuffix(url, "."+strings.ToLower(tld)) || strings.HasSuffix(url, "."+strings.ToUpper(tld)) {
+				tldCount[tld]++
+			}
+		}
+	}
+	return tldCount
+}
+
 func main() {
-	if len(os.Args) < 4 { // Check for at least 4 arguments
-		fmt.Println("Usage: go run extract_urls.go -w tld_list.txt [id]")
+	if len(os.Args) < 2 { // Check for at least 2 arguments (id)
+		fmt.Println("Usage: go run extract_urls.go [id] [-tld tld1 tld2 ...] [-debug]")
 		return
 	}
 
-	tldFile := os.Args[2]
-	id := os.Args[3]
+	id := os.Args[1]
 	proxyURL := "http://127.0.0.1:8080" // Replace with your proxy URL if needed
 
-	urlExtractor := NewURLExtractor(tldFile, id, proxyURL)
+	defaultTLDs := []string{"COM", "BR", "NET", "ORG"}
+	var customTLDs []string
+	debugMode := false
+
+	for i := 2; i < len(os.Args); i++ {
+		if os.Args[i] == "-tld" && i+1 < len(os.Args) {
+			customTLDs = append(customTLDs, os.Args[i+1])
+			i++ // Skip the next argument as it's a TLD value
+		} else if os.Args[i] == "-debug" {
+			debugMode = true // Set debug mode if -debug flag is present
+		}
+	}
+
+	var allTLDs []string
+	if len(customTLDs) > 0 {
+        allTLDs = append(defaultTLDs, customTLDs...) // Combine default and custom TLDs if provided
+    } else {
+        allTLDs = defaultTLDs // Use only default TLDs if no custom TLDs are provided
+    }
+
+	urlExtractor := NewURLExtractor(allTLDs, id, proxyURL)
 
 	urlSet, err := urlExtractor.ExtractURLs()
 	if err != nil {
-		fmt.Printf("Error extracting URLs: %s\n", err)
-		return
-	}
+        fmt.Printf("Error extracting URLs: %s\n", err)
+        return
+    }
 
-	unwantedSubstrings := []string{"browsingTopics","this.","browsingTopics",".brand","compatMod","google", "adservices", "facebook", "licdn", "gstatic", "jquery", "doubleclick", "hotjar", "linkedin", "recaptcha.net", "bing","pinimg","yimg"}
+	unwantedSubstrings := []string{"browsingTopics", "this.", "browsingTopics", ".brand", "compatMod", "google", "adservices", "facebook", "licdn", "gstatic", "jquery", "doubleclick", "hotjar", "linkedin", "recaptcha.net", "bing", "pinimg", "yimg"}
 	filteredSet := FilterURLs(urlSet, unwantedSubstrings)
 
 	if len(filteredSet) == 0 {
-		fmt.Println("No valid URLs found.")
-		return
-	}
-
-	//fmt.Println("Extracted URLs:")
+        fmt.Println("No valid URLs found.")
+        return
+    }
 
 	var sortedURLs []string
 	for url := range filteredSet {
-		url = strings.Replace(url, "\\/", "/", -1) // Replace all occurrences of "\/"
-		url = strings.Replace(url, "\\", "/", -1)  // Replace all occurrences of "\"
-		
-		if strings.HasSuffix(url, "/") {
-			url = strings.TrimSuffix(url, "/") // Remove the trailing slash
-		}
-		sortedURLs = append(sortedURLs, url)       // Collect URLs for sorting
-	}
+        url = strings.Replace(url, "\\/", "/", -1) // Replace all occurrences of "\/"
+        url = strings.Replace(url, "\\", "/", -1)  // Replace all occurrences of "\"
+
+        if strings.HasSuffix(url, "/") {
+            url = strings.TrimSuffix(url, "/") // Remove the trailing slash
+        }
+        sortedURLs = append(sortedURLs, url) // Collect URLs for sorting
+    }
 
 	sort.Strings(sortedURLs) // Sort the collected URLs
+
 	for _, url := range sortedURLs {
-		fmt.Println(url) // Print each unique URL that is not unwanted and sorted
-	}
+        fmt.Println(url) // Print each unique URL that is not unwanted and sorted
+    }
+
+	if debugMode { // If debug mode is enabled, print the TLD report table.
+        tldCounts := CountTLDs(filteredSet, allTLDs)
+        
+        fmt.Println("\nTLD | Occurrences")
+        fmt.Println("--- | ---")
+        for tld, count := range tldCounts {
+            fmt.Printf("%-3s | %d\n", tld, count)
+        }
+    }
 }
