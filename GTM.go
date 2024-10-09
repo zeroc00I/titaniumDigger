@@ -1,4 +1,3 @@
-// httpx -l att.txt -er 'GTM-[A-Z0-9]{7,8}' -t 30 | grep GTM
 package main
 
 import (
@@ -51,38 +50,50 @@ func BuildURLRegex(tlds []string) *regexp.Regexp {
 }
 
 // ExtractURLs fetches the target URL and extracts unique URLs based on the TLDs.
-func (ue *URLExtractor) ExtractURLs() (map[string]struct{}, error) {
+func (ue *URLExtractor) ExtractURLs() (string, error) { // Change return type to string
 	targetURL := fmt.Sprintf("https://googletagmanager.com/gtm.js?id=%s", ue.id)
 
 	resp, err := ue.client.Get(targetURL)
 	if err != nil {
-		return nil, fmt.Errorf("error making GET request: %w", err)
+		return "", fmt.Errorf("error making GET request: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("received status code %d", resp.StatusCode)
+		return "", fmt.Errorf("received status code %d", resp.StatusCode)
 	}
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return nil, fmt.Errorf("error reading response body: %w", err)
+		return "", fmt.Errorf("error reading response body: %w", err)
 	}
 
-	urlRegex := BuildURLRegex(ue.tlds)
+	return string(body), nil // Return the raw body as a string
+}
 
-	re := regexp.MustCompile(`[{}()\[\],]`)
-	splitContent := re.Split(string(body), -1)
+// NormalizePath normalizes the input path by replacing \\/ with / and removing unnecessary characters.
+func NormalizePath(path string) string {
+	path = strings.ReplaceAll(path, "\\/", "/") // Normalize \/
+	path = strings.ReplaceAll(path, "\\", "/")  // Replace all occurrences of \
+	path = strings.ReplaceAll(path, "//", "/")  // Replace multiple slashes with a single slash
+	return strings.TrimSpace(path)               // Trim any leading or trailing whitespace
+}
 
-	urlSet := make(map[string]struct{}) // Use a map to track unique URLs
+// ExtractPaths extracts paths from arg1 values that start with \/
+func ExtractPaths(body string) []string {
+	var paths []string
+	pathRegex := regexp.MustCompile(`"arg1":"(\\/[^"]+)"`) // Regex to match arg1 values starting with \/
 
-	for _, content := range splitContent {
-		for _, match := range urlRegex.FindAllString(content, -1) {
-			urlSet[match] = struct{}{} // Add each match to the map
+	matches := pathRegex.FindAllStringSubmatch(body, -1)
+	for _, match := range matches {
+		if len(match) > 1 {
+			path := NormalizePath(match[1]) // Normalize the extracted path
+			if path != "" {                  // Only add non-empty paths
+				paths = append(paths, path)
+			}
 		}
 	}
-
-	return urlSet, nil
+	return paths
 }
 
 // FilterURLs removes URLs that contain any of the unwanted substrings.
@@ -103,14 +114,14 @@ func FilterURLs(urlSet map[string]struct{}, unwanted []string) map[string]struct
 	return filteredSet
 }
 
-// CountTLDs counts occurrences of each TLD found in the URLs.
-func CountTLDs(urlSet map[string]struct{}, tlds []string) map[string]int {
+// CountDynamicTLDs counts unique TLDs found in the URLs.
+func CountDynamicTLDs(urlSet map[string]struct{}) map[string]int {
 	tldCount := make(map[string]int)
+	tldRegex := regexp.MustCompile(`\.(\w+)$`) // Matches TLD at the end of a URL
+
 	for url := range urlSet {
-		for _, tld := range tlds {
-			if strings.HasSuffix(url, "."+strings.ToLower(tld)) || strings.HasSuffix(url, "."+strings.ToUpper(tld)) {
-				tldCount[tld]++
-			}
+		if matches := tldRegex.FindStringSubmatch(url); len(matches) > 1 {
+			tldCount[matches[1]]++ // Increment count for this TLD
 		}
 	}
 	return tldCount
@@ -118,7 +129,7 @@ func CountTLDs(urlSet map[string]struct{}, tlds []string) map[string]int {
 
 func main() {
 	if len(os.Args) < 2 { // Check for at least 2 arguments (id)
-		fmt.Println("Usage: go run extract_urls.go [id] [-tld tld1 tld2 ...] [-debug]")
+		fmt.Println("Usage: go run extract_urls.go [id] [-tld tld1 tld2 ...] [-debug] [-path]")
 		return
 	}
 
@@ -128,15 +139,21 @@ func main() {
 	defaultTLDs := []string{"COM", "BR", "NET", "ORG"}
 	var customTLDs []string
 	debugMode := false
+	pathFlag := false
 
 	for i := 2; i < len(os.Args); i++ {
-		if os.Args[i] == "-tld" && i+1 < len(os.Args) {
-			customTLDs = append(customTLDs, os.Args[i+1])
-			i++ // Skip the next argument as it's a TLD value
-		} else if os.Args[i] == "-debug" {
-			debugMode = true // Set debug mode if -debug flag is present
-		}
-	}
+        switch os.Args[i] {
+        case "-tld":
+            if i+1 < len(os.Args) {
+                customTLDs = append(customTLDs, os.Args[i+1])
+                i++ // Skip the next argument as it's a TLD value
+            }
+        case "-debug":
+            debugMode = true // Set debug mode if -debug flag is present
+        case "-path":
+            pathFlag = true // Set path flag if -path is present
+        }
+    }
 
 	var allTLDs []string
 	if len(customTLDs) > 0 {
@@ -147,11 +164,33 @@ func main() {
 
 	urlExtractor := NewURLExtractor(allTLDs, id, proxyURL)
 
-	urlSet, err := urlExtractor.ExtractURLs()
+	body, err := urlExtractor.ExtractURLs()
 	if err != nil {
         fmt.Printf("Error extracting URLs: %s\n", err)
         return
     }
+
+	var paths []string
+	if pathFlag { // If path flag is enabled, extract paths from the raw body.
+	    paths = ExtractPaths(body)
+	    fmt.Println("\n --- Extracted Paths ---")
+	    for _, path := range paths {
+	        fmt.Println(NormalizePath(path)) // Normalize each extracted path before printing
+	    }
+    }
+
+	urlRegex := BuildURLRegex(allTLDs)
+
+	re := regexp.MustCompile(`[{}()\[\],]`)
+	splitContent := re.Split(body, -1)
+
+	urlSet := make(map[string]struct{}) // Use a map to track unique URLs
+
+	for _, content := range splitContent {
+		for _, match := range urlRegex.FindAllString(content, -1) {
+			urlSet[NormalizePath(match)] = struct{}{} // Normalize each match before adding to the set
+		}
+	}
 
 	unwantedSubstrings := []string{".command","youtube","computeGtmParameter","browsingTopics", "this.", "browsingTopics", ".brand", "compatMod", "google", "adservices", "facebook", "licdn", "gstatic", "jquery", "doubleclick", "hotjar", "linkedin", "recaptcha.net", "bing", "pinimg", "yimg"}
 	filteredSet := FilterURLs(urlSet, unwantedSubstrings)
@@ -163,25 +202,24 @@ func main() {
 
 	var sortedURLs []string
 	for url := range filteredSet {
-        url = strings.Replace(url, "\\/", "/", -1) // Replace all occurrences of "\/"
-        url = strings.Replace(url, "\\", "/", -1)  // Replace all occurrences of "\"
+        url = NormalizePath(url) // Normalize each URL before sorting and printing
 
         if strings.HasSuffix(url, "/") {
-            url = strings.TrimSuffix(url, "/") // Remove the trailing slash
+            url = strings.TrimSuffix(url, "/") // Remove the trailing slash if necessary
         }
         sortedURLs = append(sortedURLs, url) // Collect URLs for sorting
     }
 
 	sort.Strings(sortedURLs) // Sort the collected URLs
-
+	fmt.Println("\n --- URLs ---")
 	for _, url := range sortedURLs {
         fmt.Println(url) // Print each unique URL that is not unwanted and sorted
     }
 
-	if debugMode { // If debug mode is enabled, print the TLD report table.
-        tldCounts := CountTLDs(filteredSet, allTLDs)
+	if debugMode { // If debug mode is enabled, print the dynamic TLD report table.
+        tldCounts := CountDynamicTLDs(filteredSet)
         
-        fmt.Println("\nTLD | Occurrences")
+        fmt.Println("\nDynamic TLD | Occurrences")
         fmt.Println("--- | ---")
         for tld, count := range tldCounts {
             fmt.Printf("%-3s | %d\n", tld, count)
