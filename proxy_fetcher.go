@@ -1,4 +1,4 @@
-// go run proxy_fetcher.go -u https://u2x5r29q2fla6joilf8nwy8hx83zrpfe.oastify.com -t 5 -w geo_blocking_probe/5zu47n4rxm.up.proxies -t 100 -m POST -d 'teste=1'
+// go run proxy_fetcher.go -u https://u2x5r29q2fla6joilf8nwy8hx83zrpfe.oastify.com -w geo_blocking_probe/5zu47n4rxm.up.proxies -t 100 -m POST -d 'teste=1'
 package main
 
 import (
