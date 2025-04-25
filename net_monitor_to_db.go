@@ -1,3 +1,77 @@
+// INSTALLATION INSTRUCTIONS FOR DEBIAN-BASED SYSTEMS
+// --------------------------------------------------
+//
+// 1. SYSTEM PREPARATION
+// ---------------------
+// sudo apt-get update && sudo apt-get upgrade -y
+// sudo apt-get install -y build-essential libsqlite3-dev git
+//
+// sudo fallocate -l 1G /swapfile
+// sudo chmod 600 /swapfile
+// sudo mkswap /swapfile
+// sudo swapon /swapfile
+//
+//
+// 2. GO INSTALLATION
+// ------------------
+// wget https://go.dev/dl/go1.21.4.linux-amd64.tar.gz
+// sudo rm -rf /usr/local/go
+// sudo tar -C /usr/local -xzf go1.21.4.linux-amd64.tar.gz
+// rm go1.21.4.linux-amd64.tar.gz
+//
+// echo 'export PATH=$PATH:/usr/local/go/bin' >> ~/.bashrc
+// source ~/.bashrc
+//
+//
+// 3. FIREWALL CONFIGURATION
+// -------------------------
+// sudo ufw allow 22/tcp
+// sudo ufw allow 12/tcp
+// sudo ufw allow 65535/tcp
+// sudo ufw enable
+//
+//
+// 4. PROJECT SETUP
+// ----------------
+// mkdir ~/netmonitor
+// cd ~/netmonitor
+// # Place net_monitor_to_db.go in this directory
+//
+// go mod init netmonitor
+// go mod tidy
+//
+//
+// 5. NETWORK REDIRECTION
+// ---------------------------------
+// sudo iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 23:65535 -j DNAT --to-destination eth0_IP_here:65535
+// sudo apt-get install iptables-persistent -y
+// sudo netfilter-persistent save
+//
+//
+// 6. RUN APPLICATION
+// ------------------
+// sudo -E go run net_monitor_to_db.go
+//
+//
+// VERIFICATION STEPS
+// ------------------
+// # Check web interface:
+// curl http://localhost:12
+//
+// # Test TCP port:
+// nc -vz YOUR_IP 65535
+//
+// # Check database:
+// sqlite3 local.db "SELECT * FROM data"
+//
+//
+// NOTES
+// -----
+// - Add swap to /etc/fstab for permanence:
+// echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+//
+// - Port 12 requires sudo privileges
+// - Requires libsqlite3-dev for database operations
 package main
 
 import (
