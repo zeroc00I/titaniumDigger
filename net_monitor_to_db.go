@@ -3,12 +3,10 @@ package main
 import (
     "database/sql"
     "encoding/json"
-    "fmt"
     "html/template"
     "log"
     "net"
     "net/http"
-    "os"
     "sync"
     "time"
 
