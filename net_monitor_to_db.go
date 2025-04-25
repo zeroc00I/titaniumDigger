@@ -1,9 +1,3 @@
-// Instalation
-// 1 - Install GO
-// 2 - Download this file
-// 3 - On the same dir: go mod init netmonitor then go mod tidy
-// You should add some rule to guide all incoming traffic to a specific port number.
-// Example: iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 23:65535 -j DNAT --to-destination eth0_IP_here:65535
 package main
 
 import (
@@ -23,7 +17,109 @@ import (
     "github.com/microcosm-cc/bluemonday"
 )
 
-// ... [keep the same var declarations and Data struct] ...
+var (
+    db           *sql.DB
+    templateText = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>SQLite Data Table</title>
+    <style>
+            body {
+                font-family: Arial, sans-serif;
+            }
+    
+            h1 {
+                color: #333;
+            }
+    
+            table {
+                width: 100%;
+                table-layout: fixed;
+                max-width: 100%;
+                border-collapse: collapse;
+                margin: 20px 0;
+            }
+    
+            table, th, td {
+                border: 1px solid #333;
+            }
+    
+            th, td {
+                padding: 8px;
+                text-align: left;
+                overflow: hidden;
+                white-space: nowrap;
+            }
+    
+            th {
+                background-color: #333;
+                color: #fff;
+            }
+            td:nth-child(3) {
+        white-space: normal; /* Allow text to wrap to the next line */
+    }
+            tr:nth-child(even) {
+                background-color: #f2f2f2;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>Junk VPS Traffic</h1>
+        <table id="data-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>IP</th>
+                    <th>Content</th>
+                    <th>Datetime</th>
+                </tr>
+            </thead>
+            <tbody id="table-body">
+                {{range .}}
+                <tr>
+                    <td>{{.ID}}</td>
+                    <td>{{.IP}}</td>
+                    <td>{{.Content | html}}</td>
+                    <td>{{.Datetime}}</td>
+                </tr>
+                {{end}}
+            </tbody>
+        </table>
+        <script>
+            function updateTable() {
+                fetch("/data")
+                    .then(response => response.json())
+                    .then(data => {
+                        const table = document.getElementById("data-table");
+                        const tbody = document.getElementById("table-body");
+    
+                        // Clear the existing rows
+                        tbody.innerHTML = "";
+    
+                        // Iterate through the data in reverse order (latest first)
+                        for (let i = 0; i <= data.length; i++) {
+                            const row = data[i];
+                            const tr = document.createElement("tr");
+                            tr.innerHTML = "<td>" + row.ID + "</td><td>" + row.IP + "</td><td>" + row.Content + "</td><td>" + row.Datetime + "</td>";
+                            tbody.appendChild(tr);
+                        }
+                    });
+            }
+            updateTable(); // Initial update
+            setInterval(updateTable, 3000); // Update every 3 seconds
+        </script>
+    </body>
+    </html>
+    `
+)
+
+type Data struct {
+    ID       int
+    IP       string
+    Content  string
+    Datetime string
+}
 
 func getData(w http.ResponseWriter, r *http.Request) {
     log.Println("Fetching data from database...")
@@ -84,7 +180,7 @@ func main() {
     r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
         log.Println("Handling root request")
         
-        // DEBUG: Fetch actual data for the template
+        // Fetch actual data for the template
         rows, err := db.Query("SELECT * FROM data ORDER BY ID DESC LIMIT 100")
         if err != nil {
             log.Printf("Template data query error: %v", err)
@@ -119,7 +215,7 @@ func main() {
     })
 
     // HTTP Server Configuration
-    port := "8080" // DEBUG: Changed to non-privileged port
+    port := "12" // Original port from user's code
     srv := &http.Server{
         Handler:      r,
         Addr:         "0.0.0.0:" + port,
