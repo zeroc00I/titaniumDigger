@@ -1,11 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 124 124" fill="none">
+<svg xmlns="http://www.w3.org/2000/svg" width="124" height="124" viewBox="0 0 124 124" 
+     onload="alert(0x539)">
   <rect width="124" height="124" rx="24" fill="#000000"/>
-  <script type="text/javascript">
-    // Wrap script logic in CDATA to prevent XML parsing errors
-    // <![CDATA[
-    window.onload = function() {
-      alert(0x539); // 0x539 = 1337 (hexadecimal)
-    };
-    // ]]>
-  </script>
 </svg>
